@@ -53,6 +53,15 @@ type PropagatedBlock1Data struct {
 	Duration   string
 }
 
+// PropagatedBlock2Data contains the parsed information from the data portion of a propatagedblock2 log
+type PropagatedBlock2Data struct {
+	ID     string
+	conn   string
+	number int
+	hash   string
+	td     int64
+}
+
 // SplitByCol takes one line from getl log and splits it into columns
 func SplitByCol(str string) []string {
 	var re = regexp.MustCompile(`(?m)(?P<col1>^.+?\]) (?P<col2>.{1,40}) (?P<col3>.+$)?`)
@@ -108,6 +117,24 @@ func ParsePropagatedBlock1(str string) (propData PropagatedBlock1Data) {
 	propData.Recipients = recipients
 	propData.Duration = numberHashString[3]
 
+	return propData
+}
+
+// ParsePropagatedBlock2 parses PropagatedBlock2
+func ParsePropagatedBlock2(str string) (propData PropagatedBlock1Data) {
+	var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) hash=([\S\d]+) td=(\d+)`)
+	numberHashString := re.FindStringSubmatch(str)
+	/*
+		recipients, err := strconv.Atoi(numberHashString[2])
+
+		if err != nil {
+			log.Fatal("Failed to parse recipients number. Offending string: ", numberHashString[1])
+		}
+
+		propData.Hash = numberHashString[1]
+		propData.Recipients = recipients
+		propData.Duration = numberHashString[3]
+	*/
 	return propData
 }
 
