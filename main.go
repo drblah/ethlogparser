@@ -3,34 +3,75 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
-	"strings"
+	"time"
 
 	"github.com/drblah/ethlogparser/parser"
 )
 
-func main() {
-	var str = `DEBUG[10-11|08:21:00.588] Inserting downloaded chain               items=1 firstnum=1 firsthash=9c2008…0bbea8 lastnum=1 lasthash=9c2008…0bbea8
-DEBUG[10-11|08:21:00.588] Trie cache stats after commit            misses=0 unloads=0
-DEBUG[10-11|08:21:00.588] Chain split detected                     number=0 hash=351c48…6c9ea9 drop=1 dropfrom=ba0794…5bfc7a add=1 addfrom=9c2008…0bbea8
-DEBUG[10-11|08:21:00.588] Inserted new block                       number=1 hash=9c2008…0bbea8 uncles=0 txs=0 gas=0 elapsed=400.009µs
-DEBUG[10-11|08:21:00.950] Synchronisation terminated               elapsed=1.192096689s
-INFO [10-11|08:21:00.950] Fast sync complete, auto disabling 
-TRACE[10-11|08:21:00.950] Announced block                          hash=04ee97…2d7ed7 recipients=1 duration=2562047h47m16.854s`
+type logLine struct {
+	timeStamp time.Time
+	data      string
+}
 
-	scanner := bufio.NewScanner(strings.NewReader(str))
+func main() {
+
+	fileName := "./logs/miner1_log.txt"
+
+	file, err := os.Open(fileName)
+
+	if err != nil {
+		log.Fatal("Unable to open file ", fileName)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	var logLines []string
 
 	for scanner.Scan() {
+		line := scanner.Text()
 
-		tmpStr := parser.SplitByCol(scanner.Text())
+		logType := parser.ClassifyLogType(line)
 
-		for _, s := range tmpStr {
-			fmt.Println(s)
+		switch logType {
+		case parser.MSGMinedBlock:
+			fmt.Println("Type: MinedBlock :: ", line)
+
+			columns := parser.SplitByCol(line)
+
+			header := parser.ParseLogHeader(columns[1])
+
+			logData := parser.ParseMinedBlock(columns[3])
+
+			newLine := fmt.Sprintf("%s;miner1;%d;%s\n", header.TimeStamp.Format("01-02-15:04:05.000"), logData.Number, logData.Hash)
+
+			logLines = append(logLines, newLine)
+
+		case parser.MSGPropagatedBlock1:
+			fmt.Println("Type: PropagatedBlock1 :: ", line)
+		case parser.MSGPropagatedBlock2:
+			fmt.Println("Type: PropagatedBlock2 :: ", line)
+		case parser.MSGQueuedPropagatedBlock:
+			fmt.Println("Type: QueuedPropagatedBlock :: ", line)
+		case parser.MSGAnnouncedBlock1:
+			fmt.Println("Type: AnnouncedBlock1 :: ", line)
+		case parser.MSGAnnouncedBlock2:
+			fmt.Println("Type: AnnouncedBlock2 :: ", line)
+		case parser.MSGImportingPropBlock:
+			fmt.Println("Type: ImportingPropBlock :: ", line)
 		}
 
-		status, timestamp := parser.ParseStatusTimestamp(tmpStr[0])
+		//split := parser.SplitByCol(line)
 
-		fmt.Println(status, timestamp)
-		os.Exit(0)
+		//fmt.Println(split[1])
+
+		//logHeader := parser.ParseLogHeader(split[1])
+
+		//fmt.Println(logHeader)
+
+		//logFiles = append(logFiles, logLine{logHeader.TimeStamp, line})
 	}
+
 }
