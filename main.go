@@ -15,7 +15,13 @@ type logLine struct {
 	data      string
 }
 
+func makeLogString(timeStamp time.Time, miner string, msgType int, blockNumber int, hash string) string {
+	return fmt.Sprintf("%s;%s;%d;%d;%s\n", timeStamp.Format("01-02-15:04:05.000"), miner, msgType, blockNumber, hash)
+}
+
 func main() {
+
+	minerName := "minerNameChangeMe"
 
 	fileName := "./logs/miner1_log.txt"
 
@@ -37,20 +43,26 @@ func main() {
 
 		switch logType {
 		case parser.MSGMinedBlock:
-			fmt.Println("Type: MinedBlock :: ", line)
+			//fmt.Println("Type: MinedBlock :: ", line)
 
 			columns := parser.SplitByCol(line)
-
 			header := parser.ParseLogHeader(columns[1])
-
 			logData := parser.ParseMinedBlock(columns[3])
 
-			newLine := fmt.Sprintf("%s;miner1;%d;%s\n", header.TimeStamp.Format("01-02-15:04:05.000"), logData.Number, logData.Hash)
+			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGMinedBlock, logData.Number, logData.Hash)
+			logLines = append(logLines, newLine)
+		case parser.MSGPropagatedBlock1:
+			//fmt.Println("Type: PropagatedBlock1 :: ", line)
 
+			columns := parser.SplitByCol(line)
+			header := parser.ParseLogHeader(columns[1])
+			logData := parser.ParsePropagatedBlock1(columns[3])
+
+			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGPropagatedBlock1, -1, logData.Hash)
 			logLines = append(logLines, newLine)
 
-		case parser.MSGPropagatedBlock1:
-			fmt.Println("Type: PropagatedBlock1 :: ", line)
+			fmt.Println(logLines)
+			os.Exit(0)
 		case parser.MSGPropagatedBlock2:
 			fmt.Println("Type: PropagatedBlock2 :: ", line)
 		case parser.MSGQueuedPropagatedBlock:

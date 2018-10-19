@@ -46,6 +46,13 @@ type MinedBlockData struct {
 	Hash   string
 }
 
+// PropagatedBlock1Data contains the parsed information from the data portion of a propatagedblock1 log
+type PropagatedBlock1Data struct {
+	Hash       string
+	Recipients int
+	Duration   string
+}
+
 // SplitByCol takes one line from getl log and splits it into columns
 func SplitByCol(str string) []string {
 	var re = regexp.MustCompile(`(?m)(?P<col1>^.+?\]) (?P<col2>.{1,40}) (?P<col3>.+$)?`)
@@ -84,6 +91,24 @@ func ParseMinedBlock(str string) (minedBlock MinedBlockData) {
 	minedBlock.Number = blockNumber
 	minedBlock.Hash = numberHashString[2]
 	return minedBlock
+}
+
+// ParsePropagatedBlock1 parses PropagatedBlock1
+func ParsePropagatedBlock1(str string) (propData PropagatedBlock1Data) {
+	var re = regexp.MustCompile(`hash=(\S+) recipients=(\d+) duration=([\d\S]+)`)
+	numberHashString := re.FindStringSubmatch(str)
+
+	recipients, err := strconv.Atoi(numberHashString[2])
+
+	if err != nil {
+		log.Fatal("Failed to parse recipients number. Offending string: ", numberHashString[1])
+	}
+
+	propData.Hash = numberHashString[1]
+	propData.Recipients = recipients
+	propData.Duration = numberHashString[3]
+
+	return propData
 }
 
 // ClassifyLogType determines the type of log
