@@ -77,6 +77,14 @@ type AnnouncedBlock2Data struct {
 	Hash   string
 }
 
+// QueuedPropagatedBlockData contains the parsed information from the data portion of an QueuedPropagatedBlock log
+type QueuedPropagatedBlockData struct {
+	Peer   string
+	Number int
+	Hash   string
+	queued int
+}
+
 // SplitByCol takes one line from getl log and splits it into columns
 func SplitByCol(str string) []string {
 	var re = regexp.MustCompile(`(?m)(?P<col1>^.+?\]) (?P<col2>.{1,40}) (?P<col3>.+$)?`)
@@ -161,8 +169,8 @@ func ParsePropagatedBlock2(str string) (propData PropagatedBlock2Data) {
 	return propData
 }
 
-// AnnouncedBlock1 parses AnnouncedBlock1
-func AnnouncedBlock1(str string) (annData AnnouncedBlock1Data) {
+// ParseAnnouncedBlock1 parses ParseAnnouncedBlock1
+func ParseAnnouncedBlock1(str string) (annData AnnouncedBlock1Data) {
 	var re = regexp.MustCompile(`hash=(\S+) recipients=(\d+) duration=([\d\S]+)`)
 	numberHashString := re.FindStringSubmatch(str)
 
@@ -179,8 +187,8 @@ func AnnouncedBlock1(str string) (annData AnnouncedBlock1Data) {
 	return annData
 }
 
-// AnnouncedBlock2 parses AnnouncedBlock1Data
-func AnnouncedBlock2(str string) (annData AnnouncedBlock2Data) {
+// ParseAnnouncedBlock2 parses AnnouncedBlock1Data
+func ParseAnnouncedBlock2(str string) (annData AnnouncedBlock2Data) {
 	var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) hash=([\S\d]+)`)
 	numberHashString := re.FindStringSubmatch(str)
 
@@ -195,6 +203,22 @@ func AnnouncedBlock2(str string) (annData AnnouncedBlock2Data) {
 	annData.Number = number
 	annData.Hash = numberHashString[4]
 
+	return annData
+}
+
+// ParseQueuedPropagatedBlock parses ParseQueuedPropagatedBlock
+func ParseQueuedPropagatedBlock(str string) (annData QueuedPropagatedBlockData) {
+	/*
+		var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) hash=([\S\d]+)`)
+		numberHashString := re.FindStringSubmatch(str)
+
+
+		number, err := strconv.Atoi(numberHashString[3])
+
+		if err != nil {
+			log.Fatal("Failed to parse number. Offending string: ", numberHashString[3])
+		}
+	*/
 	return annData
 }
 

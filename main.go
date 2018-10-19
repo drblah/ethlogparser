@@ -23,7 +23,7 @@ func main() {
 
 	minerName := "minerNameChangeMe"
 
-	fileName := "./logs/miner1_log.txt"
+	fileName := "./logs/miner2_log.txt"
 
 	file, err := os.Open(fileName)
 
@@ -78,7 +78,7 @@ func main() {
 
 			columns := parser.SplitByCol(line)
 			header := parser.ParseLogHeader(columns[1])
-			logData := parser.AnnouncedBlock1(columns[3])
+			logData := parser.ParseAnnouncedBlock1(columns[3])
 
 			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGAnnouncedBlock1, -1, logData.Hash)
 			logLines = append(logLines, newLine)
@@ -88,7 +88,7 @@ func main() {
 
 			columns := parser.SplitByCol(line)
 			header := parser.ParseLogHeader(columns[1])
-			logData := parser.AnnouncedBlock2(columns[3])
+			logData := parser.ParseAnnouncedBlock2(columns[3])
 
 			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGAnnouncedBlock2, logData.Number, logData.Hash)
 			logLines = append(logLines, newLine)
