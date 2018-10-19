@@ -56,10 +56,25 @@ type PropagatedBlock1Data struct {
 // PropagatedBlock2Data contains the parsed information from the data portion of a propatagedblock2 log
 type PropagatedBlock2Data struct {
 	ID     string
-	conn   string
-	number int
-	hash   string
-	td     int64
+	Conn   string
+	Number int
+	Hash   string
+	TD     int64
+}
+
+// AnnouncedBlock1Data contains the parsed information from the data portion of an AnnouncedBlock1 log
+type AnnouncedBlock1Data struct {
+	Hash       string
+	Recipients int
+	Duration   string
+}
+
+// AnnouncedBlock2Data contains the parsed information from the data portion of an AnnouncedBlock2 log
+type AnnouncedBlock2Data struct {
+	ID     string
+	Conn   string
+	Number int
+	Hash   string
 }
 
 // SplitByCol takes one line from getl log and splits it into columns
@@ -121,21 +136,66 @@ func ParsePropagatedBlock1(str string) (propData PropagatedBlock1Data) {
 }
 
 // ParsePropagatedBlock2 parses PropagatedBlock2
-func ParsePropagatedBlock2(str string) (propData PropagatedBlock1Data) {
+func ParsePropagatedBlock2(str string) (propData PropagatedBlock2Data) {
 	var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) hash=([\S\d]+) td=(\d+)`)
 	numberHashString := re.FindStringSubmatch(str)
-	/*
-		recipients, err := strconv.Atoi(numberHashString[2])
 
-		if err != nil {
-			log.Fatal("Failed to parse recipients number. Offending string: ", numberHashString[1])
-		}
+	number, err := strconv.Atoi(numberHashString[3])
 
-		propData.Hash = numberHashString[1]
-		propData.Recipients = recipients
-		propData.Duration = numberHashString[3]
-	*/
+	if err != nil {
+		log.Fatal("Failed to parse number. Offending string: ", numberHashString[3])
+	}
+
+	td, err := strconv.ParseInt(numberHashString[5], 10, 64)
+
+	if err != nil {
+		log.Fatal("Failed to parse td. Offending string: ", numberHashString[5])
+	}
+
+	propData.ID = numberHashString[1]
+	propData.Conn = numberHashString[2]
+	propData.Number = number
+	propData.Hash = numberHashString[4]
+	propData.TD = td
+
 	return propData
+}
+
+// AnnouncedBlock1 parses AnnouncedBlock1
+func AnnouncedBlock1(str string) (annData AnnouncedBlock1Data) {
+	var re = regexp.MustCompile(`hash=(\S+) recipients=(\d+) duration=([\d\S]+)`)
+	numberHashString := re.FindStringSubmatch(str)
+
+	recipients, err := strconv.Atoi(numberHashString[2])
+
+	if err != nil {
+		log.Fatal("Failed to parse recipients number. Offending string: ", numberHashString[1])
+	}
+
+	annData.Hash = numberHashString[1]
+	annData.Recipients = recipients
+	annData.Duration = numberHashString[3]
+
+	return annData
+}
+
+// AnnouncedBlock2 parses AnnouncedBlock1Data
+func AnnouncedBlock2(str string) (annData AnnouncedBlock2Data) {
+	var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) hash=([\S\d]+)`)
+	numberHashString := re.FindStringSubmatch(str)
+
+	number, err := strconv.Atoi(numberHashString[3])
+
+	if err != nil {
+		log.Fatal("Failed to parse number. Offending string: ", numberHashString[3])
+	}
+
+	annData.ID = numberHashString[1]
+	annData.Conn = numberHashString[2]
+	annData.Number = number
+	annData.Hash = numberHashString[4]
+
+	return annData
 }
 
 // ClassifyLogType determines the type of log

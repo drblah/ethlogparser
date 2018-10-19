@@ -61,16 +61,41 @@ func main() {
 			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGPropagatedBlock1, -1, logData.Hash)
 			logLines = append(logLines, newLine)
 
-			fmt.Println(logLines)
-			os.Exit(0)
 		case parser.MSGPropagatedBlock2:
-			fmt.Println("Type: PropagatedBlock2 :: ", line)
+			//fmt.Println("Type: PropagatedBlock2 :: ", line)
+
+			columns := parser.SplitByCol(line)
+			header := parser.ParseLogHeader(columns[1])
+			logData := parser.ParsePropagatedBlock2(columns[3])
+
+			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGPropagatedBlock2, logData.Number, logData.Hash)
+			logLines = append(logLines, newLine)
+
 		case parser.MSGQueuedPropagatedBlock:
 			fmt.Println("Type: QueuedPropagatedBlock :: ", line)
 		case parser.MSGAnnouncedBlock1:
-			fmt.Println("Type: AnnouncedBlock1 :: ", line)
+			//fmt.Println("Type: AnnouncedBlock1 :: ", line)
+
+			columns := parser.SplitByCol(line)
+			header := parser.ParseLogHeader(columns[1])
+			logData := parser.AnnouncedBlock1(columns[3])
+
+			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGAnnouncedBlock1, -1, logData.Hash)
+			logLines = append(logLines, newLine)
+
 		case parser.MSGAnnouncedBlock2:
-			fmt.Println("Type: AnnouncedBlock2 :: ", line)
+			//fmt.Println("Type: AnnouncedBlock2 :: ", line)
+
+			columns := parser.SplitByCol(line)
+			header := parser.ParseLogHeader(columns[1])
+			logData := parser.AnnouncedBlock2(columns[3])
+
+			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGAnnouncedBlock2, logData.Number, logData.Hash)
+			logLines = append(logLines, newLine)
+
+			fmt.Println(logLines)
+			os.Exit(0)
+
 		case parser.MSGImportingPropBlock:
 			fmt.Println("Type: ImportingPropBlock :: ", line)
 		}
