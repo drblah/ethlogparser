@@ -21,9 +21,9 @@ func makeLogString(timeStamp time.Time, miner string, msgType int, blockNumber i
 
 func main() {
 
-	minerName := "minerNameChangeMe"
+	minerName := "miner1"
 
-	fileName := "./logs/miner2_log.txt"
+	fileName := "./logs/miner1_log.txt"
 
 	file, err := os.Open(fileName)
 
@@ -72,7 +72,15 @@ func main() {
 			logLines = append(logLines, newLine)
 
 		case parser.MSGQueuedPropagatedBlock:
-			fmt.Println("Type: QueuedPropagatedBlock :: ", line)
+			//fmt.Println("Type: QueuedPropagatedBlock :: ", line)
+
+			columns := parser.SplitByCol(line)
+			header := parser.ParseLogHeader(columns[1])
+			logData := parser.ParseQueuedPropagatedBlock(columns[3])
+
+			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGQueuedPropagatedBlock, logData.Number, logData.Hash)
+			logLines = append(logLines, newLine)
+
 		case parser.MSGAnnouncedBlock1:
 			//fmt.Println("Type: AnnouncedBlock1 :: ", line)
 
@@ -93,22 +101,31 @@ func main() {
 			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGAnnouncedBlock2, logData.Number, logData.Hash)
 			logLines = append(logLines, newLine)
 
-			fmt.Println(logLines)
-			os.Exit(0)
-
 		case parser.MSGImportingPropBlock:
-			fmt.Println("Type: ImportingPropBlock :: ", line)
+			//fmt.Println("Type: ImportingPropBlock :: ", line)
+
+			columns := parser.SplitByCol(line)
+			header := parser.ParseLogHeader(columns[1])
+			logData := parser.ParseImportingPropBlock(columns[3])
+
+			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGImportingPropBlock, logData.Number, logData.Hash)
+			logLines = append(logLines, newLine)
+
 		}
 
-		//split := parser.SplitByCol(line)
+	}
 
-		//fmt.Println(split[1])
+	//fmt.Println(logLines)
 
-		//logHeader := parser.ParseLogHeader(split[1])
+	f, err := os.Create("output/miner1.csv")
 
-		//fmt.Println(logHeader)
+	if err != nil {
+		log.Fatal("Failed to open output file")
+	}
+	defer f.Close()
 
-		//logFiles = append(logFiles, logLine{logHeader.TimeStamp, line})
+	for _, line := range logLines {
+		f.WriteString(line)
 	}
 
 }

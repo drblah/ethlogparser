@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 	"strconv"
@@ -82,7 +83,14 @@ type QueuedPropagatedBlockData struct {
 	Peer   string
 	Number int
 	Hash   string
-	queued int
+	Queued int
+}
+
+// ImportingPropBlockData contains the parsed information from the data portion of an ImportingPropBlock log
+type ImportingPropBlockData struct {
+	Peer   string
+	Number int
+	Hash   string
 }
 
 // SplitByCol takes one line from getl log and splits it into columns
@@ -189,8 +197,13 @@ func ParseAnnouncedBlock1(str string) (annData AnnouncedBlock1Data) {
 
 // ParseAnnouncedBlock2 parses AnnouncedBlock1Data
 func ParseAnnouncedBlock2(str string) (annData AnnouncedBlock2Data) {
-	var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) hash=([\S\d]+)`)
+	var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) +hash=([\S\d]+)`)
 	numberHashString := re.FindStringSubmatch(str)
+
+	if len(numberHashString) < 4 {
+		fmt.Println("String is: ", str)
+		fmt.Println("After regex: ", numberHashString)
+	}
 
 	number, err := strconv.Atoi(numberHashString[3])
 
@@ -206,20 +219,54 @@ func ParseAnnouncedBlock2(str string) (annData AnnouncedBlock2Data) {
 	return annData
 }
 
-// ParseQueuedPropagatedBlock parses ParseQueuedPropagatedBlock
-func ParseQueuedPropagatedBlock(str string) (annData QueuedPropagatedBlockData) {
-	/*
-		var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) hash=([\S\d]+)`)
-		numberHashString := re.FindStringSubmatch(str)
+// ParseQueuedPropagatedBlock parses QueuedPropagatedBlock
+func ParseQueuedPropagatedBlock(str string) (queueData QueuedPropagatedBlockData) {
 
+	var re = regexp.MustCompile(`peer=([\S\d]+) number=(\d+) +hash=([\S\d]+) queued=(\d+)`)
+	numberHashString := re.FindStringSubmatch(str)
 
-		number, err := strconv.Atoi(numberHashString[3])
+	if len(numberHashString) < 4 {
+		fmt.Println("String is: ", str)
+		fmt.Println("After regex: ", numberHashString)
+	}
 
-		if err != nil {
-			log.Fatal("Failed to parse number. Offending string: ", numberHashString[3])
-		}
-	*/
-	return annData
+	number, err := strconv.Atoi(numberHashString[2])
+
+	if err != nil {
+		log.Fatal("Failed to parse number. Offending string: ", numberHashString[2])
+	}
+
+	queued, err := strconv.Atoi(numberHashString[4])
+
+	if err != nil {
+		log.Fatal("Failed to parse queued. Offending string: ", numberHashString[4])
+	}
+
+	queueData.Peer = numberHashString[1]
+	queueData.Number = number
+	queueData.Hash = numberHashString[3]
+	queueData.Queued = queued
+
+	return queueData
+}
+
+// ParseImportingPropBlock parses ImportingPropBlock
+func ParseImportingPropBlock(str string) (importData ImportingPropBlockData) {
+
+	var re = regexp.MustCompile(`peer=([\S\d]+) number=(\d+) hash=([\S\d]+)`)
+	numberHashString := re.FindStringSubmatch(str)
+
+	number, err := strconv.Atoi(numberHashString[2])
+
+	if err != nil {
+		log.Fatal("Failed to parse number. Offending string: ", numberHashString[2])
+	}
+
+	importData.Peer = numberHashString[1]
+	importData.Number = number
+	importData.Hash = numberHashString[3]
+
+	return importData
 }
 
 // ClassifyLogType determines the type of log
