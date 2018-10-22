@@ -15,15 +15,15 @@ type logLine struct {
 	data      string
 }
 
-func makeLogString(timeStamp time.Time, miner string, msgType int, blockNumber int, hash string) string {
-	return fmt.Sprintf("%s;%s;%d;%d;%s\n", timeStamp.Format("01-02-15:04:05.000"), miner, msgType, blockNumber, hash)
+func makeLogString(timeStamp time.Time, miner string, msgType string, blockNumber int, hash string) string {
+	return fmt.Sprintf("%s;%s;%s;%d;%s\n", timeStamp.Format("01-02-15:04:05.000"), miner, msgType, blockNumber, hash)
 }
 
 func main() {
 
-	minerName := "miner1"
+	minerName := "miner3"
 
-	fileName := "./logs/miner1_log.txt"
+	fileName := "./logs/miner3_log.txt"
 
 	file, err := os.Open(fileName)
 
@@ -49,7 +49,7 @@ func main() {
 			header := parser.ParseLogHeader(columns[1])
 			logData := parser.ParseMinedBlock(columns[3])
 
-			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGMinedBlock, logData.Number, logData.Hash)
+			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
 			logLines = append(logLines, newLine)
 		case parser.MSGPropagatedBlock1:
 			//fmt.Println("Type: PropagatedBlock1 :: ", line)
@@ -58,7 +58,7 @@ func main() {
 			header := parser.ParseLogHeader(columns[1])
 			logData := parser.ParsePropagatedBlock1(columns[3])
 
-			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGPropagatedBlock1, -1, logData.Hash)
+			newLine := makeLogString(header.TimeStamp, minerName, columns[2], -1, logData.Hash)
 			logLines = append(logLines, newLine)
 
 		case parser.MSGPropagatedBlock2:
@@ -68,7 +68,7 @@ func main() {
 			header := parser.ParseLogHeader(columns[1])
 			logData := parser.ParsePropagatedBlock2(columns[3])
 
-			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGPropagatedBlock2, logData.Number, logData.Hash)
+			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
 			logLines = append(logLines, newLine)
 
 		case parser.MSGQueuedPropagatedBlock:
@@ -78,7 +78,7 @@ func main() {
 			header := parser.ParseLogHeader(columns[1])
 			logData := parser.ParseQueuedPropagatedBlock(columns[3])
 
-			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGQueuedPropagatedBlock, logData.Number, logData.Hash)
+			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
 			logLines = append(logLines, newLine)
 
 		case parser.MSGAnnouncedBlock1:
@@ -88,7 +88,7 @@ func main() {
 			header := parser.ParseLogHeader(columns[1])
 			logData := parser.ParseAnnouncedBlock1(columns[3])
 
-			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGAnnouncedBlock1, -1, logData.Hash)
+			newLine := makeLogString(header.TimeStamp, minerName, columns[2], -1, logData.Hash)
 			logLines = append(logLines, newLine)
 
 		case parser.MSGAnnouncedBlock2:
@@ -98,7 +98,7 @@ func main() {
 			header := parser.ParseLogHeader(columns[1])
 			logData := parser.ParseAnnouncedBlock2(columns[3])
 
-			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGAnnouncedBlock2, logData.Number, logData.Hash)
+			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
 			logLines = append(logLines, newLine)
 
 		case parser.MSGImportingPropBlock:
@@ -108,7 +108,7 @@ func main() {
 			header := parser.ParseLogHeader(columns[1])
 			logData := parser.ParseImportingPropBlock(columns[3])
 
-			newLine := makeLogString(header.TimeStamp, minerName, parser.MSGImportingPropBlock, logData.Number, logData.Hash)
+			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
 			logLines = append(logLines, newLine)
 
 		}
@@ -117,7 +117,7 @@ func main() {
 
 	//fmt.Println(logLines)
 
-	f, err := os.Create("output/miner1.csv")
+	f, err := os.Create("output/miner3.csv")
 
 	if err != nil {
 		log.Fatal("Failed to open output file")
