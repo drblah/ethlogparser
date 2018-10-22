@@ -3,8 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/drblah/ethlogparser/parser"
@@ -19,113 +22,134 @@ func makeLogString(timeStamp time.Time, miner string, msgType string, blockNumbe
 	return fmt.Sprintf("%s;%s;%s;%d;%s\n", timeStamp.Format("01-02-15:04:05.000"), miner, msgType, blockNumber, hash)
 }
 
-func main() {
-
-	minerName := "miner3"
-
-	fileName := "./logs/miner3_log.txt"
-
-	file, err := os.Open(fileName)
+func getInputList(dir string) (logFiles []os.FileInfo) {
+	files, err := ioutil.ReadDir(dir)
 
 	if err != nil {
-		log.Fatal("Unable to open file ", fileName)
+		log.Fatal("Unable to open input dir. ", err)
 	}
-	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
+	for _, f := range files {
+		if filepath.Ext(f.Name()) == ".txt" {
+			logFiles = append(logFiles, f)
+		}
+	}
 
-	var logLines []string
+	return logFiles
+}
 
-	for scanner.Scan() {
-		line := scanner.Text()
+func main() {
 
-		logType := parser.ClassifyLogType(line)
+	inputFiles := getInputList("./logs/")
 
-		switch logType {
-		case parser.MSGMinedBlock:
-			//fmt.Println("Type: MinedBlock :: ", line)
+	for _, f := range inputFiles {
+		fileName := fmt.Sprintf("./logs/%s", f.Name())
+		minerName := strings.TrimSuffix(f.Name(), "_log.txt")
 
-			columns := parser.SplitByCol(line)
-			header := parser.ParseLogHeader(columns[1])
-			logData := parser.ParseMinedBlock(columns[3])
+		fmt.Println("Processing: ", fileName)
 
-			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-			logLines = append(logLines, newLine)
-		case parser.MSGPropagatedBlock1:
-			//fmt.Println("Type: PropagatedBlock1 :: ", line)
+		file, err := os.Open(fileName)
 
-			columns := parser.SplitByCol(line)
-			header := parser.ParseLogHeader(columns[1])
-			logData := parser.ParsePropagatedBlock1(columns[3])
+		if err != nil {
+			log.Fatal("Unable to open file ", fileName)
+		}
+		defer file.Close()
 
-			newLine := makeLogString(header.TimeStamp, minerName, columns[2], -1, logData.Hash)
-			logLines = append(logLines, newLine)
+		scanner := bufio.NewScanner(file)
 
-		case parser.MSGPropagatedBlock2:
-			//fmt.Println("Type: PropagatedBlock2 :: ", line)
+		var logLines []string
 
-			columns := parser.SplitByCol(line)
-			header := parser.ParseLogHeader(columns[1])
-			logData := parser.ParsePropagatedBlock2(columns[3])
+		for scanner.Scan() {
+			line := scanner.Text()
 
-			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-			logLines = append(logLines, newLine)
+			logType := parser.ClassifyLogType(line)
 
-		case parser.MSGQueuedPropagatedBlock:
-			//fmt.Println("Type: QueuedPropagatedBlock :: ", line)
+			switch logType {
+			case parser.MSGMinedBlock:
+				//fmt.Println("Type: MinedBlock :: ", line)
 
-			columns := parser.SplitByCol(line)
-			header := parser.ParseLogHeader(columns[1])
-			logData := parser.ParseQueuedPropagatedBlock(columns[3])
+				columns := parser.SplitByCol(line)
+				header := parser.ParseLogHeader(columns[1])
+				logData := parser.ParseMinedBlock(columns[3])
 
-			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-			logLines = append(logLines, newLine)
+				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
+				logLines = append(logLines, newLine)
+			case parser.MSGPropagatedBlock1:
+				//fmt.Println("Type: PropagatedBlock1 :: ", line)
 
-		case parser.MSGAnnouncedBlock1:
-			//fmt.Println("Type: AnnouncedBlock1 :: ", line)
+				columns := parser.SplitByCol(line)
+				header := parser.ParseLogHeader(columns[1])
+				logData := parser.ParsePropagatedBlock1(columns[3])
 
-			columns := parser.SplitByCol(line)
-			header := parser.ParseLogHeader(columns[1])
-			logData := parser.ParseAnnouncedBlock1(columns[3])
+				newLine := makeLogString(header.TimeStamp, minerName, columns[2], -1, logData.Hash)
+				logLines = append(logLines, newLine)
 
-			newLine := makeLogString(header.TimeStamp, minerName, columns[2], -1, logData.Hash)
-			logLines = append(logLines, newLine)
+			case parser.MSGPropagatedBlock2:
+				//fmt.Println("Type: PropagatedBlock2 :: ", line)
 
-		case parser.MSGAnnouncedBlock2:
-			//fmt.Println("Type: AnnouncedBlock2 :: ", line)
+				columns := parser.SplitByCol(line)
+				header := parser.ParseLogHeader(columns[1])
+				logData := parser.ParsePropagatedBlock2(columns[3])
 
-			columns := parser.SplitByCol(line)
-			header := parser.ParseLogHeader(columns[1])
-			logData := parser.ParseAnnouncedBlock2(columns[3])
+				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
+				logLines = append(logLines, newLine)
 
-			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-			logLines = append(logLines, newLine)
+			case parser.MSGQueuedPropagatedBlock:
+				//fmt.Println("Type: QueuedPropagatedBlock :: ", line)
 
-		case parser.MSGImportingPropBlock:
-			//fmt.Println("Type: ImportingPropBlock :: ", line)
+				columns := parser.SplitByCol(line)
+				header := parser.ParseLogHeader(columns[1])
+				logData := parser.ParseQueuedPropagatedBlock(columns[3])
 
-			columns := parser.SplitByCol(line)
-			header := parser.ParseLogHeader(columns[1])
-			logData := parser.ParseImportingPropBlock(columns[3])
+				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
+				logLines = append(logLines, newLine)
 
-			newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-			logLines = append(logLines, newLine)
+			case parser.MSGAnnouncedBlock1:
+				//fmt.Println("Type: AnnouncedBlock1 :: ", line)
+
+				columns := parser.SplitByCol(line)
+				header := parser.ParseLogHeader(columns[1])
+				logData := parser.ParseAnnouncedBlock1(columns[3])
+
+				newLine := makeLogString(header.TimeStamp, minerName, columns[2], -1, logData.Hash)
+				logLines = append(logLines, newLine)
+
+			case parser.MSGAnnouncedBlock2:
+				//fmt.Println("Type: AnnouncedBlock2 :: ", line)
+
+				columns := parser.SplitByCol(line)
+				header := parser.ParseLogHeader(columns[1])
+				logData := parser.ParseAnnouncedBlock2(columns[3])
+
+				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
+				logLines = append(logLines, newLine)
+
+			case parser.MSGImportingPropBlock:
+				//fmt.Println("Type: ImportingPropBlock :: ", line)
+
+				columns := parser.SplitByCol(line)
+				header := parser.ParseLogHeader(columns[1])
+				logData := parser.ParseImportingPropBlock(columns[3])
+
+				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
+				logLines = append(logLines, newLine)
+
+			}
 
 		}
 
-	}
+		outName := fmt.Sprintf("output/%s.csv", minerName)
+		outputFile, err := os.Create(outName)
 
-	//fmt.Println(logLines)
+		if err != nil {
+			log.Fatal("Failed to open output file")
+		}
+		defer outputFile.Close()
 
-	f, err := os.Create("output/miner3.csv")
+		for _, line := range logLines {
+			outputFile.WriteString(line)
+		}
 
-	if err != nil {
-		log.Fatal("Failed to open output file")
-	}
-	defer f.Close()
-
-	for _, line := range logLines {
-		f.WriteString(line)
 	}
 
 }
