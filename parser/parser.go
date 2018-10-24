@@ -119,7 +119,7 @@ func ParseLogHeader(str string) (header Header) {
 
 // ParseMinedBlock parses the data portion of a MinedBlock log
 func ParseMinedBlock(str string) (minedBlock MinedBlockData) {
-	var re = regexp.MustCompile(`number=(\d+) hash=(\S+)`)
+	var re = regexp.MustCompile(`number=(\d+) +hash=(\S+)`)
 	numberHashString := re.FindStringSubmatch(str)
 
 	blockNumber, err := strconv.Atoi(numberHashString[1])
@@ -135,7 +135,7 @@ func ParseMinedBlock(str string) (minedBlock MinedBlockData) {
 
 // ParsePropagatedBlock1 parses PropagatedBlock1
 func ParsePropagatedBlock1(str string) (propData PropagatedBlock1Data) {
-	var re = regexp.MustCompile(`hash=(\S+) recipients=(\d+) duration=([\d\S]+)`)
+	var re = regexp.MustCompile(`hash=(\S+) recipients=(\d+) +duration=([\d\S]+)`)
 	numberHashString := re.FindStringSubmatch(str)
 
 	recipients, err := strconv.Atoi(numberHashString[2])
@@ -153,7 +153,7 @@ func ParsePropagatedBlock1(str string) (propData PropagatedBlock1Data) {
 
 // ParsePropagatedBlock2 parses PropagatedBlock2
 func ParsePropagatedBlock2(str string) (propData PropagatedBlock2Data) {
-	var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) hash=([\S\d]+) td=(\d+)`)
+	var re = regexp.MustCompile(`id=([\S\d]+) conn=(\S+) number=(\d+) +hash=([\S\d]+) td=(\d+)`)
 	numberHashString := re.FindStringSubmatch(str)
 
 	number, err := strconv.Atoi(numberHashString[3])
@@ -179,7 +179,7 @@ func ParsePropagatedBlock2(str string) (propData PropagatedBlock2Data) {
 
 // ParseAnnouncedBlock1 parses ParseAnnouncedBlock1
 func ParseAnnouncedBlock1(str string) (annData AnnouncedBlock1Data) {
-	var re = regexp.MustCompile(`hash=(\S+) recipients=(\d+) duration=([\d\S]+)`)
+	var re = regexp.MustCompile(`hash=(\S+) recipients=(\d+) +duration=([\d\S]+)`)
 	numberHashString := re.FindStringSubmatch(str)
 
 	recipients, err := strconv.Atoi(numberHashString[2])
@@ -253,7 +253,7 @@ func ParseQueuedPropagatedBlock(str string) (queueData QueuedPropagatedBlockData
 // ParseImportingPropBlock parses ImportingPropBlock
 func ParseImportingPropBlock(str string) (importData ImportingPropBlockData) {
 
-	var re = regexp.MustCompile(`peer=([\S\d]+) number=(\d+) hash=([\S\d]+)`)
+	var re = regexp.MustCompile(`peer=([\S\d]+) number=(\d+) +hash=([\S\d]+)`)
 	numberHashString := re.FindStringSubmatch(str)
 
 	number, err := strconv.Atoi(numberHashString[2])
