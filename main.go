@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/akamensky/argparse"
+
 	"github.com/drblah/ethlogparser/parser"
 )
 
@@ -39,6 +41,20 @@ func getInputList(dir string) (logFiles []os.FileInfo) {
 }
 
 func main() {
+
+	// Command line argument parser
+	cliParser := argparse.NewParser("ethlogparser", "Parses the output of geth and outputs it as csv.")
+
+	var concat = cliParser.Flag("c", "concat", &argparse.Options{Help: "Concatenates all logs into one output"})
+
+	err := cliParser.Parse(os.Args)
+	if err != nil {
+		log.Fatal(cliParser.Usage(err))
+	}
+
+	if *concat {
+		log.Fatal("We concat now")
+	}
 
 	inputFiles := getInputList("./logs/")
 
