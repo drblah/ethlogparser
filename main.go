@@ -134,6 +134,15 @@ func main() {
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
 				logLines = append(logLines, newLine)
 
+			case parser.MSGInsertedForkedBlock:
+				//fmt.Println("Type: MSGInsertedForkedBlock :: ", line)
+
+				columns := parser.SplitByCol(line)
+				header := parser.ParseLogHeader(columns[1])
+				logData := parser.ParseInsertedForkedBlock(columns[3])
+
+				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
+				logLines = append(logLines, newLine)
 			}
 
 		}

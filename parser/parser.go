@@ -33,6 +33,9 @@ const (
 
 	// MSGImportingPropBlock : Importing propagated block               peer=d9c2b87e4525fab9 number=10 hash=75d8ad…0f4a6c
 	MSGImportingPropBlock
+
+	// MSGInsertedForkedBlock : Inserted forked block                    number=1  hash=e68e79…6f23a5 diff=131072 elapsed=651.016µs txs=0 gas=0 uncles=0
+	MSGInsertedForkedBlock
 )
 
 // Header contains the parsed information from a log header
@@ -91,6 +94,17 @@ type ImportingPropBlockData struct {
 	Peer   string
 	Number int
 	Hash   string
+}
+
+// InsertedForkedBlockData contains the parsed information from the data portion of an InsertedForkedBlock log
+type InsertedForkedBlockData struct {
+	Number  int
+	Hash    string
+	Diff    int
+	Elapsed string
+	Txs     int
+	Gas     int
+	Uncles  int
 }
 
 // SplitByCol takes one line from getl log and splits it into columns
@@ -269,6 +283,52 @@ func ParseImportingPropBlock(str string) (importData ImportingPropBlockData) {
 	return importData
 }
 
+// ParseInsertedForkedBlock parses InsertedForkedBlock
+func ParseInsertedForkedBlock(str string) (insertData InsertedForkedBlockData) {
+	var re = regexp.MustCompile(`number=(\d+) +hash=([\d\S]+) diff=(\d+) elapsed=([\d\S]+) +txs=(\d+) gas=(\d+) uncles=(\d+)`)
+	numberHashString := re.FindStringSubmatch(str)
+
+	number, err := strconv.Atoi(numberHashString[1])
+
+	if err != nil {
+		log.Fatal("Failed to parse number. Offending string: ", numberHashString[1])
+	}
+
+	diff, err := strconv.Atoi(numberHashString[3])
+
+	if err != nil {
+		log.Fatal("Failed to parse diff. Offending string: ", numberHashString[3])
+	}
+
+	txs, err := strconv.Atoi(numberHashString[5])
+
+	if err != nil {
+		log.Fatal("Failed to parse txs. Offending string: ", numberHashString[5])
+	}
+
+	gas, err := strconv.Atoi(numberHashString[6])
+
+	if err != nil {
+		log.Fatal("Failed to parse gas. Offending string: ", numberHashString[6])
+	}
+
+	uncles, err := strconv.Atoi(numberHashString[7])
+
+	if err != nil {
+		log.Fatal("Failed to parse uncles. Offending string: ", numberHashString[7])
+	}
+
+	insertData.Number = number
+	insertData.Hash = numberHashString[2]
+	insertData.Diff = diff
+	insertData.Elapsed = numberHashString[4]
+	insertData.Txs = txs
+	insertData.Gas = gas
+	insertData.Uncles = uncles
+
+	return insertData
+}
+
 // ClassifyLogType determines the type of log
 func ClassifyLogType(str string) (logType int) {
 
@@ -287,6 +347,8 @@ func ClassifyLogType(str string) (logType int) {
 		logType = MSGAnnouncedBlock2
 	case strings.Contains(str, "Importing propagated block               peer="):
 		logType = MSGImportingPropBlock
+	case strings.Contains(str, "Inserted forked block                    "):
+		logType = MSGInsertedForkedBlock
 	default:
 		logType = MSGUnknown
 	}
