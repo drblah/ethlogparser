@@ -36,6 +36,13 @@ const (
 
 	// MSGInsertedForkedBlock : Inserted forked block                    number=1  hash=e68e79…6f23a5 diff=131072 elapsed=651.016µs txs=0 gas=0 uncles=0
 	MSGInsertedForkedBlock
+
+	// Unimplemented
+	/*
+		DEBUG[10-24|12:31:26.433] Chain split detected                     number=278 hash=75e1fa…a7ee0d drop=1 dropfrom=b1ad02…79f8fb add=1 addfrom=f692d6…226951
+		DEBUG[10-24|12:31:26.434] Inserted new block                       number=279 hash=f692d6…226951 uncles=0 txs=0 gas=0 elapsed=17.166ms
+		INFO [10-24|12:31:26.434] Imported new chain segment               blocks=1  txs=0 mgas=0.000 elapsed=17.214ms     mgasps=0.000 number=279 hash=f692d6…226951 cache=27.26kB
+	*/
 )
 
 // Header contains the parsed information from a log header
@@ -285,7 +292,7 @@ func ParseImportingPropBlock(str string) (importData ImportingPropBlockData) {
 
 // ParseInsertedForkedBlock parses InsertedForkedBlock
 func ParseInsertedForkedBlock(str string) (insertData InsertedForkedBlockData) {
-	var re = regexp.MustCompile(`number=(\d+) +hash=([\d\S]+) diff=(\d+) elapsed=([\d\S]+) +txs=(\d+) gas=(\d+) uncles=(\d+)`)
+	var re = regexp.MustCompile(`number=(\d+) +hash=([\d\S]+) diff=(\d+) elapsed=([\d\S]+) +txs=(\d+) +gas=(\d+) +uncles=(\d+)`)
 	numberHashString := re.FindStringSubmatch(str)
 
 	number, err := strconv.Atoi(numberHashString[1])

@@ -45,7 +45,9 @@ func main() {
 	// Command line argument parser
 	cliParser := argparse.NewParser("ethlogparser", "Parses the output of geth and outputs it as csv.")
 
-	var concat = cliParser.Flag("c", "concat", &argparse.Options{Help: "Concatenates all logs into one output"})
+	var concat = cliParser.Flag("c", "concat", &argparse.Options{Help: "Concatenates all logs into one output."})
+	var usestdout = cliParser.Flag("s", "stdout", &argparse.Options{Help: "Output to stdout instead of file."})
+	var inputPath = cliParser.String("i", "input", &argparse.Options{Help: "Path to directory which contains the raw log files."})
 
 	err := cliParser.Parse(os.Args)
 	if err != nil {
@@ -56,7 +58,12 @@ func main() {
 		log.Fatal("We concat now")
 	}
 
-	inputFiles := getInputList("./logs/")
+	if len(*inputPath) == 0 {
+		log.Println("Input path not set. Defaulting to ./logs/")
+		*inputPath = "./logs/"
+	}
+
+	inputFiles := getInputList(*inputPath)
 
 	for _, f := range inputFiles {
 		fileName := fmt.Sprintf("./logs/%s", f.Name())
@@ -73,9 +80,17 @@ func main() {
 
 		scanner := bufio.NewScanner(file)
 
-		var logLines []string
+		outName := fmt.Sprintf("output/%s.csv", minerName)
+		outputFile, err := os.Create(outName)
+
+		if err != nil {
+			log.Fatal("Failed to open output file, ", outName)
+		}
+		defer outputFile.Close()
 
 		for scanner.Scan() {
+			var logLine string
+
 			line := scanner.Text()
 
 			logType := parser.ClassifyLogType(line)
@@ -89,7 +104,7 @@ func main() {
 				logData := parser.ParseMinedBlock(columns[3])
 
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-				logLines = append(logLines, newLine)
+				logLine = newLine
 			case parser.MSGPropagatedBlock1:
 				//fmt.Println("Type: PropagatedBlock1 :: ", line)
 
@@ -98,7 +113,7 @@ func main() {
 				logData := parser.ParsePropagatedBlock1(columns[3])
 
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], -1, logData.Hash)
-				logLines = append(logLines, newLine)
+				logLine = newLine
 
 			case parser.MSGPropagatedBlock2:
 				//fmt.Println("Type: PropagatedBlock2 :: ", line)
@@ -108,7 +123,7 @@ func main() {
 				logData := parser.ParsePropagatedBlock2(columns[3])
 
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-				logLines = append(logLines, newLine)
+				logLine = newLine
 
 			case parser.MSGQueuedPropagatedBlock:
 				//fmt.Println("Type: QueuedPropagatedBlock :: ", line)
@@ -118,7 +133,7 @@ func main() {
 				logData := parser.ParseQueuedPropagatedBlock(columns[3])
 
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-				logLines = append(logLines, newLine)
+				logLine = newLine
 
 			case parser.MSGAnnouncedBlock1:
 				//fmt.Println("Type: AnnouncedBlock1 :: ", line)
@@ -128,7 +143,7 @@ func main() {
 				logData := parser.ParseAnnouncedBlock1(columns[3])
 
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], -1, logData.Hash)
-				logLines = append(logLines, newLine)
+				logLine = newLine
 
 			case parser.MSGAnnouncedBlock2:
 				//fmt.Println("Type: AnnouncedBlock2 :: ", line)
@@ -138,7 +153,7 @@ func main() {
 				logData := parser.ParseAnnouncedBlock2(columns[3])
 
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-				logLines = append(logLines, newLine)
+				logLine = newLine
 
 			case parser.MSGImportingPropBlock:
 				//fmt.Println("Type: ImportingPropBlock :: ", line)
@@ -148,7 +163,7 @@ func main() {
 				logData := parser.ParseImportingPropBlock(columns[3])
 
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-				logLines = append(logLines, newLine)
+				logLine = newLine
 
 			case parser.MSGInsertedForkedBlock:
 				//fmt.Println("Type: MSGInsertedForkedBlock :: ", line)
@@ -158,21 +173,16 @@ func main() {
 				logData := parser.ParseInsertedForkedBlock(columns[3])
 
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
-				logLines = append(logLines, newLine)
+				logLine = newLine
+
 			}
 
-		}
+			if *usestdout == true {
+				fmt.Print(logLine)
+			} else {
+				outputFile.WriteString(logLine)
+			}
 
-		outName := fmt.Sprintf("output/%s.csv", minerName)
-		outputFile, err := os.Create(outName)
-
-		if err != nil {
-			log.Fatal("Failed to open output file")
-		}
-		defer outputFile.Close()
-
-		for _, line := range logLines {
-			outputFile.WriteString(line)
 		}
 
 	}
