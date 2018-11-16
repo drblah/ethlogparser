@@ -21,7 +21,7 @@ type logLine struct {
 }
 
 func makeLogString(timeStamp time.Time, miner string, msgType string, blockNumber int, hash string) string {
-	return fmt.Sprintf("%s;%s;%s;%d;%s\n", timeStamp.Format("01-02-15:04:05.000"), miner, msgType, blockNumber, hash)
+	return fmt.Sprintf("2018-%s;%s;%s;%d;%s\n", timeStamp.Format("01-02 15:04:05.000"), miner, msgType, blockNumber, hash)
 }
 
 func getInputList(dir string) (logFiles []os.FileInfo) {
@@ -66,10 +66,10 @@ func main() {
 	inputFiles := getInputList(*inputPath)
 
 	for _, f := range inputFiles {
-		fileName := fmt.Sprintf("./logs/%s", f.Name())
+		fileName := fmt.Sprintf("%s%s", *inputPath, f.Name())
 		minerName := strings.TrimSuffix(f.Name(), "_log.txt")
 
-		fmt.Println("Processing: ", fileName)
+		log.Println("Processing: ", fileName)
 
 		file, err := os.Open(fileName)
 

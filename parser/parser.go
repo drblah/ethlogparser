@@ -292,7 +292,7 @@ func ParseImportingPropBlock(str string) (importData ImportingPropBlockData) {
 
 // ParseInsertedForkedBlock parses InsertedForkedBlock
 func ParseInsertedForkedBlock(str string) (insertData InsertedForkedBlockData) {
-	var re = regexp.MustCompile(`number=(\d+) +hash=([\d\S]+) diff=(\d+) elapsed=([\d\S]+) +txs=(\d+) +gas=(\d+) +uncles=(\d+)`)
+	var re = regexp.MustCompile(`number=(\d+) +hash=([\d\S]+) +diff=(\d+) +elapsed=([\d\S]+) +txs=(\d+) +gas=(\d+) +uncles=(\d+)`)
 	numberHashString := re.FindStringSubmatch(str)
 
 	number, err := strconv.Atoi(numberHashString[1])
