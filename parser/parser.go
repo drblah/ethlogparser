@@ -37,9 +37,10 @@ const (
 	// MSGInsertedForkedBlock : Inserted forked block                    number=1  hash=e68e79…6f23a5 diff=131072 elapsed=651.016µs txs=0 gas=0 uncles=0
 	MSGInsertedForkedBlock
 
+	// MSGChainSplitDetected : Chain split detected                     number=278 hash=75e1fa…a7ee0d drop=1 dropfrom=b1ad02…79f8fb add=1 addfrom=f692d6…226951
+	MSGChainSplitDetected
 	// Unimplemented
 	/*
-		DEBUG[10-24|12:31:26.433] Chain split detected                     number=278 hash=75e1fa…a7ee0d drop=1 dropfrom=b1ad02…79f8fb add=1 addfrom=f692d6…226951
 		DEBUG[10-24|12:31:26.434] Inserted new block                       number=279 hash=f692d6…226951 uncles=0 txs=0 gas=0 elapsed=17.166ms
 		INFO [10-24|12:31:26.434] Imported new chain segment               blocks=1  txs=0 mgas=0.000 elapsed=17.214ms     mgasps=0.000 number=279 hash=f692d6…226951 cache=27.26kB
 	*/
@@ -112,6 +113,16 @@ type InsertedForkedBlockData struct {
 	Txs     int
 	Gas     int
 	Uncles  int
+}
+
+// ChainSplitDetectedData containse the parsed information from the data portion of ChainSplitDetected log
+type ChainSplitDetectedData struct {
+	Number   int
+	Hash     string
+	Drop     int
+	Dropfrom string
+	Add      int
+	Addfrom  string
 }
 
 // SplitByCol takes one line from getl log and splits it into columns
@@ -336,6 +347,39 @@ func ParseInsertedForkedBlock(str string) (insertData InsertedForkedBlockData) {
 	return insertData
 }
 
+// ParseChainSplitDetected parses ChainSplitDetected
+func ParseChainSplitDetected(str string) (splitData ChainSplitDetectedData) {
+	var re = regexp.MustCompile(`number=(\d+) hash=(\S+) drop=(\d+) dropfrom=(\S+) add=(\d+) addfrom=(\S+)`)
+	numberHashString := re.FindStringSubmatch(str)
+
+	number, err := strconv.Atoi(numberHashString[1])
+
+	if err != nil {
+		log.Fatal("Failed to parse number. Offending string: ", numberHashString[1])
+	}
+
+	drop, err := strconv.Atoi(numberHashString[3])
+
+	if err != nil {
+		log.Fatal("Failed to parse drop. Offending string: ", numberHashString[3])
+	}
+
+	add, err := strconv.Atoi(numberHashString[5])
+
+	if err != nil {
+		log.Fatal("Failed to parse add. Offending string: ", numberHashString[5])
+	}
+
+	splitData.Number = number
+	splitData.Hash = numberHashString[2]
+	splitData.Drop = drop
+	splitData.Dropfrom = numberHashString[4]
+	splitData.Add = add
+	splitData.Addfrom = numberHashString[6]
+
+	return splitData
+}
+
 // ClassifyLogType determines the type of log
 func ClassifyLogType(str string) (logType int) {
 
@@ -356,6 +400,8 @@ func ClassifyLogType(str string) (logType int) {
 		logType = MSGImportingPropBlock
 	case strings.Contains(str, "Inserted forked block                    "):
 		logType = MSGInsertedForkedBlock
+	case strings.Contains(str, "Chain split detected"):
+		logType = MSGChainSplitDetected
 	default:
 		logType = MSGUnknown
 	}

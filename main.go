@@ -175,6 +175,16 @@ func main() {
 				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
 				logLine = newLine
 
+			case parser.MSGChainSplitDetected:
+				//fmt.Println("Type: MSGChainSplitDetected :: ", line)
+
+				columns := parser.SplitByCol(line)
+				header := parser.ParseLogHeader(columns[1])
+				logData := parser.ParseChainSplitDetected(columns[3])
+
+				newLine := makeLogString(header.TimeStamp, minerName, columns[2], logData.Number, logData.Hash)
+				logLine = newLine
+
 			}
 
 			if *usestdout == true {
